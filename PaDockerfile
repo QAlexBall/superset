@@ -124,6 +124,8 @@ RUN export CHROMEDRIVER_VERSION=$(curl --silent https://chromedriver.storage.goo
     chmod 755 /usr/bin/chromedriver && \
     rm -f chromedriver_linux64.zip
 
+RUN apt-get install fonts-arphic-ukai fonts-arphic-uming fonts-ipafont-mincho fonts-ipafont-gothic fonts-unfonts-core
+
 USER superset
 
 HEALTHCHECK CMD curl -f "http://localhost:$SUPERSET_PORT/health"
