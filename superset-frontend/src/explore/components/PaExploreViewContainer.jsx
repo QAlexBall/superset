@@ -303,7 +303,6 @@ function ExploreViewContainer(props) {
         handleTimeRange(new Date(start).toISOString().split(".")[0] + ' : ' + new Date(end).toISOString().split(".")[0]);
         break;
       case chartName.includes('[TL]'):
-        console.log("@304", data);
         let time = Date.parse(data.value[0].split(" ")[0] + "T" + data.value[0].split(" ")[1] + ":00");
         handleTimeRange(
           new Date(time - timezoneOffset).toISOString().split(".")[0] 
@@ -365,7 +364,7 @@ function ExploreViewContainer(props) {
           "isNew": false,
           "filterOptionName": "filter_pnegf7yxd1g_3523x62uhnf"
         });
-      } else if ("P_DATA_TYPE" === data.type[i]) {
+      } else if ("P_DATA_TYPE" === data.type[i] || "data_type" === data.type[i]) {
         tableFormData.adhoc_filters.push({
           "expressionType": "SIMPLE",
           "subject": data.type[i],

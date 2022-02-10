@@ -372,7 +372,10 @@ let showRowData = (row: object) => {
     entityCode = row['original']['device_id'];
     pos = row['original']['pos'];
     endTime = row['original']['event_ts'];
-    startTime = endTime - parseInt(row['original']['cycle_time']) * 1000
+    startTime = endTime - parseInt(row['original']['cycle_time']) * 1000;
+    if ("NaN" === startTime.toString()) {
+      startTime = endTime - parseInt(row['original']['value']) * 1000;
+    }
   }
   let url = 'https://manage-' + clientName + '.standalone.powerarena.com:' + port + '/admin/mark-for-reason/?tab=single-view&entity_code=' + entityCode + '&pos=' + pos + '&start_ts=' + startTime + '&end_ts=' + endTime;
   console.log("@378", url);
