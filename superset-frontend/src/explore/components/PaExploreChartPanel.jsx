@@ -297,6 +297,18 @@ const ExploreChartPanel = props => {
                 }, props.chartName)
               }
             );
+          } else if (props.chartName.includes('[B_S]')) {
+            return props.chart.queriesResponse[0].data.map((item) => {
+              return <Button
+                class="clickButton"
+                onClick={() => props.updateTableForm({
+                  'value': [[item['key']]],
+                  'type': ['data_type'],
+                  'ops': ['IN']
+                }, props.chartName)}>
+                  {item['key']}
+                </Button>
+            })
           } else {
             return Object.entries(props.chart.queriesResponse[0].data[0].values)
             .map(([key, value]) => {
@@ -323,7 +335,7 @@ const ExploreChartPanel = props => {
                     {value.x}
                   </Button>
                 default:
-                  return <p></p>
+                  console.log("no such chart template");
               }
             });
           }

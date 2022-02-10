@@ -57,7 +57,8 @@ import {
 } from '../../logger/LogUtils';
 import {
   tableFormDataObject,
-  flattenTableFormDataObject
+  flattenTableFormDataObject,
+  sopAllColumns
 } from '../tableFormDataObject';
 import { ConsoleSqlOutlined } from '@ant-design/icons';
 
@@ -311,6 +312,9 @@ function ExploreViewContainer(props) {
         );
         // handleTimeRange();
         break
+      case chartName.includes('[B_S]'):
+        handleAdhocFiltersWorkstationAndDataType(data);
+        break;
     }
   }
 
@@ -521,10 +525,12 @@ function ExploreViewContainer(props) {
     tableFormData.row_limit = props.form_data.row_limit;
 
     const datasetName = $(".title-select").text();
-    if (datasetName.includes("flatten")) {
+    if (datasetName.includes("flatten_")) {
       tableFormData.all_columns = flattenTableFormDataObject.all_columns
+    } else if (datasetName.includes("sop_")) {
+      tableFormData.all_columns = sopAllColumns
     }
-
+    console.log("@531", tableFormData)
     // key should large than props.form_data.slice_id;
     props.actions.postChartFormData(tableFormData, false, 60, 10000000000, undefined, undefined)
       .then(json => {
