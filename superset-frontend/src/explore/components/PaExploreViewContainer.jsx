@@ -57,7 +57,8 @@ import {
 } from '../../logger/LogUtils';
 import {
   tableFormDataObject,
-  flattenTableFormDataObject
+  flattenTableFormDataObject,
+  sopAllColumns
 } from '../tableFormDataObject';
 import { ConsoleSqlOutlined } from '@ant-design/icons';
 
@@ -302,7 +303,6 @@ function ExploreViewContainer(props) {
         handleTimeRange(new Date(start).toISOString().split(".")[0] + ' : ' + new Date(end).toISOString().split(".")[0]);
         break;
       case chartName.includes('[TL]'):
-        console.log("@304", data);
         let time = Date.parse(data.value[0].split(" ")[0] + "T" + data.value[0].split(" ")[1] + ":00");
         handleTimeRange(
           new Date(time - timezoneOffset).toISOString().split(".")[0] 
@@ -311,6 +311,9 @@ function ExploreViewContainer(props) {
         );
         // handleTimeRange();
         break
+      case chartName.includes('[B_S]'):
+        handleAdhocFiltersWorkstationAndDataType(data);
+        break;
     }
   }
 
@@ -361,7 +364,7 @@ function ExploreViewContainer(props) {
           "isNew": false,
           "filterOptionName": "filter_pnegf7yxd1g_3523x62uhnf"
         });
-      } else if ("P_DATA_TYPE" === data.type[i]) {
+      } else if ("P_DATA_TYPE" === data.type[i] || "data_type" === data.type[i]) {
         tableFormData.adhoc_filters.push({
           "expressionType": "SIMPLE",
           "subject": data.type[i],
@@ -521,10 +524,12 @@ function ExploreViewContainer(props) {
     tableFormData.row_limit = props.form_data.row_limit;
 
     const datasetName = $(".title-select").text();
-    if (datasetName.includes("flatten")) {
+    if (datasetName.includes("flatten_")) {
       tableFormData.all_columns = flattenTableFormDataObject.all_columns
+    } else if (datasetName.includes("sop_")) {
+      tableFormData.all_columns = sopAllColumns
     }
-
+    console.log("@531", tableFormData)
     // key should large than props.form_data.slice_id;
     props.actions.postChartFormData(tableFormData, false, 60, 10000000000, undefined, undefined)
       .then(json => {

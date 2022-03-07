@@ -88,3 +88,24 @@ export const flattenTableFormDataObject = {
     "color_pn": true,
     "extra_form_data": {}
 }
+
+
+export const sopAllColumns = [
+    "event_ts",
+    "event_ts_timezone",
+    "workstation_name_with_event_ts",
+    "workstation_name",
+    "data_type",
+    "value",
+    "target_ct_time",
+    "production_line_code",
+    "pos",
+    "product_code",
+    "product_description",
+    "device_id",
+    "ymd",
+    "hour",
+    "batch_size",
+    "process_target_ct_time",
+    "sop_std_time"
+]
