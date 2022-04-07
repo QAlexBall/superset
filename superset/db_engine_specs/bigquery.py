@@ -28,11 +28,11 @@ from marshmallow import fields, Schema
 from marshmallow.exceptions import ValidationError
 from sqlalchemy import column
 from sqlalchemy.engine.base import Engine
-from sqlalchemy.engine.url import make_url
 from sqlalchemy.sql import sqltypes
 from typing_extensions import TypedDict
 
 from superset.databases.schemas import encrypted_field_properties, EncryptedString
+from superset.databases.utils import make_url_safe
 from superset.db_engine_specs.base import BaseEngineSpec
 from superset.db_engine_specs.exceptions import SupersetDBAPIDisconnectionError
 from superset.errors import SupersetError, SupersetErrorType
@@ -72,7 +72,8 @@ ma_plugin = MarshmallowPlugin()
 
 class BigQueryParametersSchema(Schema):
     credentials_info = EncryptedString(
-        required=False, description="Contents of BigQuery JSON credentials.",
+        required=False,
+        description="Contents of BigQuery JSON credentials.",
     )
     query = fields.Dict(required=False)
 
@@ -98,6 +99,8 @@ class BigQueryEngineSpec(BaseEngineSpec):
     # BigQuery doesn't maintain context when running multiple statements in the
     # same cursor, so we need to run all statements at once
     run_multiple_statements_as_one = True
+
+    allows_hidden_cc_in_orderby = True
 
     """
     https://www.python.org/dev/peps/pep-0249/#arraysize
@@ -131,14 +134,14 @@ class BigQueryEngineSpec(BaseEngineSpec):
         "PT15M": "CAST(TIMESTAMP_SECONDS("
         "15*60 * DIV(UNIX_SECONDS(CAST({col} AS TIMESTAMP)), 15*60)"
         ") AS {type})",
-        "PT0.5H": "CAST(TIMESTAMP_SECONDS("
+        "PT30M": "CAST(TIMESTAMP_SECONDS("
         "30*60 * DIV(UNIX_SECONDS(CAST({col} AS TIMESTAMP)), 30*60)"
         ") AS {type})",
         "PT1H": "{func}({col}, HOUR)",
         "P1D": "{func}({col}, DAY)",
         "P1W": "{func}({col}, WEEK)",
         "P1M": "{func}({col}, MONTH)",
-        "P0.25Y": "{func}({col}, QUARTER)",
+        "P3M": "{func}({col}, QUARTER)",
         "P1Y": "{func}({col}, YEAR)",
     }
 
@@ -184,7 +187,9 @@ class BigQueryEngineSpec(BaseEngineSpec):
     }
 
     @classmethod
-    def convert_dttm(cls, target_type: str, dttm: datetime) -> Optional[str]:
+    def convert_dttm(
+        cls, target_type: str, dttm: datetime, db_extra: Optional[Dict[str, Any]] = None
+    ) -> Optional[str]:
         tt = target_type.upper()
         if tt == utils.TemporalType.DATE:
             return f"CAST('{dttm.date().isoformat()}' AS DATE)"
@@ -372,7 +377,7 @@ class BigQueryEngineSpec(BaseEngineSpec):
     def get_parameters_from_uri(
         cls, uri: str, encrypted_extra: Optional[Dict[str, str]] = None
     ) -> Any:
-        value = make_url(uri)
+        value = make_url_safe(uri)
 
         # Building parameters from encrypted_extra and uri
         if encrypted_extra:
@@ -382,7 +387,7 @@ class BigQueryEngineSpec(BaseEngineSpec):
 
     @classmethod
     def get_dbapi_exception_mapping(cls) -> Dict[Type[Exception], Type[Exception]]:
-        # pylint: disable=import-error,import-outside-toplevel
+        # pylint: disable=import-outside-toplevel
         from google.auth.exceptions import DefaultCredentialsError
 
         return {DefaultCredentialsError: SupersetDBAPIDisconnectionError}

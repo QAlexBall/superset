@@ -17,16 +17,16 @@
  * under the License.
  */
 import {
-  CategoricalColorNamespace,
+  DataMaskStateWithId,
   DataRecordFilters,
   JsonObject,
+  NativeFiltersState,
 } from '@superset-ui/core';
 import { ChartQueryPayload, Charts, LayoutItem } from 'src/dashboard/types';
 import { getExtraFormData } from 'src/dashboard/components/nativeFilters/utils';
-import { DataMaskStateWithId } from 'src/dataMask/types';
 import { areObjectsEqual } from 'src/reduxUtils';
 import getEffectiveExtraFilters from './getEffectiveExtraFilters';
-import { ChartConfiguration, NativeFiltersState } from '../../reducers/types';
+import { ChartConfiguration } from '../../reducers/types';
 import { getAllActiveFilters } from '../activeAllDashboardFilters';
 
 // We cache formData objects so that our connected container components don't always trigger
@@ -45,6 +45,8 @@ export interface GetFormDataWithExtraFiltersArguments {
   sliceId: number;
   dataMask: DataMaskStateWithId;
   nativeFilters: NativeFiltersState;
+  labelColors?: Record<string, string>;
+  sharedLabelColors?: Record<string, string>;
 }
 
 // this function merge chart's formData with dashboard filters value,
@@ -61,11 +63,9 @@ export default function getFormDataWithExtraFilters({
   sliceId,
   layout,
   dataMask,
+  labelColors,
+  sharedLabelColors,
 }: GetFormDataWithExtraFiltersArguments) {
-  // Propagate color mapping to chart
-  const scale = CategoricalColorNamespace.getScale(colorScheme, colorNamespace);
-  const labelColors = scale.getColorMap();
-
   // if dashboard metadata + filters have not changed, use cache if possible
   const cachedFormData = cachedFormdataByChart[sliceId];
   if (
@@ -77,6 +77,9 @@ export default function getFormDataWithExtraFilters({
       ignoreUndefined: true,
     }) &&
     areObjectsEqual(cachedFormData?.label_colors, labelColors, {
+      ignoreUndefined: true,
+    }) &&
+    areObjectsEqual(cachedFormData?.shared_label_colors, sharedLabelColors, {
       ignoreUndefined: true,
     }) &&
     !!cachedFormData &&
@@ -109,11 +112,13 @@ export default function getFormDataWithExtraFilters({
 
   const formData = {
     ...chart.formData,
-    ...(colorScheme && { color_scheme: colorScheme }),
     label_colors: labelColors,
+    shared_label_colors: sharedLabelColors,
+    ...(colorScheme && { color_scheme: colorScheme }),
     extra_filters: getEffectiveExtraFilters(filters),
     ...extraData,
   };
+
   cachedFiltersByChart[sliceId] = filters;
   cachedFormdataByChart[sliceId] = { ...formData, dataMask };
 

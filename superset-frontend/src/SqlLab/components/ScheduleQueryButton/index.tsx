@@ -18,13 +18,19 @@
  */
 import React, { FunctionComponent, useState } from 'react';
 import SchemaForm, { FormProps, FormValidation } from 'react-jsonschema-form';
-import { Row, Col, Input, TextArea } from 'src/common/components';
+import { Row, Col } from 'src/components';
+import { Input, TextArea } from 'src/components/Input';
 import { t, styled } from '@superset-ui/core';
 import * as chrono from 'chrono-node';
 import ModalTrigger from 'src/components/ModalTrigger';
 import { Form, FormItem } from 'src/components/Form';
-import './ScheduleQueryButton.less';
 import Button from 'src/components/Button';
+
+const appContainer = document.getElementById('app');
+const bootstrapData = JSON.parse(
+  appContainer?.getAttribute('data-bootstrap') || '{}',
+);
+const scheduledQueriesConf = bootstrapData?.common?.conf?.SCHEDULED_QUERIES;
 
 const validators = {
   greater: (a: number, b: number) => a > b,
@@ -34,7 +40,7 @@ const validators = {
 };
 
 const getJSONSchema = () => {
-  const jsonSchema = window.featureFlags.SCHEDULED_QUERIES?.JSONSCHEMA;
+  const jsonSchema = scheduledQueriesConf?.JSONSCHEMA;
   // parse date-time into usable value (eg, 'today' => `new Date()`)
   if (jsonSchema) {
     Object.entries(jsonSchema.properties).forEach(
@@ -52,10 +58,9 @@ const getJSONSchema = () => {
   return {};
 };
 
-const getUISchema = () => window.featureFlags.SCHEDULED_QUERIES?.UISCHEMA;
+const getUISchema = () => scheduledQueriesConf?.UISCHEMA;
 
-const getValidationRules = () =>
-  window.featureFlags.SCHEDULED_QUERIES?.VALIDATION || [];
+const getValidationRules = () => scheduledQueriesConf?.VALIDATION || [];
 
 const getValidator = () => {
   const rules: any = getValidationRules();
@@ -102,6 +107,24 @@ export const StyledButtonComponent = styled(Button)`
       background: none;
       color: rgba(0, 0, 0, 0.85);
     }
+  }
+`;
+
+const StyledJsonSchema = styled.div`
+  i.glyphicon {
+    display: none;
+  }
+  .btn-add::after {
+    content: '+';
+  }
+  .array-item-move-up::after {
+    content: '↑';
+  }
+  .array-item-move-down::after {
+    content: '↓';
+  }
+  .array-item-remove::after {
+    content: '-';
   }
 `;
 
@@ -169,7 +192,7 @@ const ScheduleQueryButton: FunctionComponent<ScheduleQueryButtonProps> = ({
       </StyledRow>
       <Row>
         <Col xs={24}>
-          <div className="json-schema">
+          <StyledJsonSchema>
             <SchemaForm
               schema={getJSONSchema()}
               uiSchema={getUISchema}
@@ -184,7 +207,7 @@ const ScheduleQueryButton: FunctionComponent<ScheduleQueryButtonProps> = ({
                 Submit
               </Button>
             </SchemaForm>
-          </div>
+          </StyledJsonSchema>
         </Col>
       </Row>
       {scheduleQueryWarning && (
